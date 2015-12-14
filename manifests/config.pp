@@ -12,15 +12,19 @@ class filebeat::config {
     'logging'  => $filebeat::logging,
   }
 
-  $template_file = versioncmp($::puppetversion, '4.0.0') ? {
-    '-1'    => 'filebeat3.yml.erb',
-    default => 'filebeat.yml.erb',
+  if $filebeat::config_template {
+    $template_file = $filebeat::config_template
+  } else {
+    $template_file = versioncmp($::puppetversion, '4.0.0') ? {
+      '-1'    => "${module_name}/filebeat3.yml.erb",
+      default => "${module_name}/filebeat.yml.erb",
+    }
   }
 
   file {'filebeat.yml':
     ensure  => file,
     path    => '/etc/filebeat/filebeat.yml',
-    content => template("${module_name}/${template_file}"),
+    content => template("${template_file}"),
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
