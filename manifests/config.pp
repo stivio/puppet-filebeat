@@ -22,21 +22,12 @@ class filebeat::config {
     }
   }
 
-  file {'filebeat.yml':
-    ensure  => file,
-    path    => '/etc/filebeat/filebeat.yml',
-    content => template("${template_file}"),
-    owner   => 'root',
-    group   => 'root',
-    mode    => '0644',
-    notify  => Service['filebeat'],
-  }
   case $::kernel {
     'Linux'   : {
       file {'filebeat.yml':
         ensure  => file,
         path    => '/etc/filebeat/filebeat.yml',
-        content => template($filebeat::conf_template),
+        content => template("${template_file}"),
         owner   => 'root',
         group   => 'root',
         mode    => $filebeat::config_file_mode,
