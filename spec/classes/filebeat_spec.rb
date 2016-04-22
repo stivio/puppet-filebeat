@@ -3,9 +3,10 @@ require 'spec_helper'
 describe 'filebeat', :type => :class do
   let :facts do
     {
+      :kernel => 'Linux',
       :osfamily => 'Debian',
       :lsbdistid => 'Ubuntu',
-      :puppetversion => ENV['PUPPET_GEM_VERSION'],
+      :rubyversion => '1.9.3',
     }
   end
 
@@ -25,8 +26,9 @@ describe 'filebeat', :type => :class do
     it { is_expected.to contain_service('filebeat').with(
       :enable => true,
       :ensure => 'running',
+      :provider => nil, # Provider should use the resource default
     )}
-    it { is_expected.to contain_apt__source('filebeat').with(
+    it { is_expected.to contain_apt__source('beats').with(
       :location => 'http://packages.elastic.co/beats/apt',
       :key      => {
         'id'     => '46095ACC8548582C1A2699A9D27D666CD88E42B4',
@@ -39,16 +41,48 @@ describe 'filebeat', :type => :class do
   describe 'on a RHEL system' do
     let :facts do
       {
+        :kernel => 'Linux',
         :osfamily => 'RedHat',
-        :puppetversion => ENV['PUPPET_GEM_VERSION'],
+        :rubyversion => '1.8.7',
       }
     end
 
-    it { is_expected.to contain_yumrepo('filebeat').with(
+    it { is_expected.to contain_yumrepo('beats').with(
       :baseurl => 'https://packages.elastic.co/beats/yum/el/$basearch',
       :gpgkey  => 'http://packages.elastic.co/GPG-KEY-elasticsearch',
     ) }
+
+    it { is_expected.to contain_service('filebeat').with(
+      :enable => true,
+      :ensure => 'running',
+      :provider => 'redhat',
+    )}
+
   end
+
+  describe 'on a Windows system' do
+    let :facts do
+      {
+        :kernel => 'Windows',
+        :rubyversion => '1.9.3',
+      }
+    end
+
+    it { is_expected.to contain_file('filebeat.yml').with(
+      :path => 'C:/Program Files/Filebeat/filebeat.yml',
+    )}
+    it { is_expected.to contain_file('filebeat-config-dir').with(
+      :ensure => 'directory',
+      :path   => 'C:/Program Files/Filebeat/conf.d',
+      :recurse => true,
+    )}
+    it { is_expected.to contain_service('filebeat').with(
+      :enable => true,
+      :ensure => 'running',
+      :provider => nil, # Provider should use the resource default
+    )}
+  end
+
 
   describe 'on a Solaris system' do
     let :facts do
